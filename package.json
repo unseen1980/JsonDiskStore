@@ -1,6 +1,6 @@
 {
   "name": "json-disk-store",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A simple key value json store that uses local json files. Supports in-memory cache and encryption.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
