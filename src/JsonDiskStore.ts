@@ -1,6 +1,7 @@
 import fs from "fs-extra";
 import path from "path";
 import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
 type JsonData = { [key: string]: any };
 
@@ -97,10 +98,14 @@ export class JsonDiskStore {
     await fs.writeFile(this.filePath, this.encrypt(JSON.stringify(data)));
   }
 
-  public async write(key: string, value: any): Promise<void> {
+  public async write(key: string, value: any): Promise<string> {
     const data = await this.readJsonData();
-    data[key] = value;
+
+    const uniqueKey = `${key}-${uuidv4()}`;
+    data[uniqueKey] = value;
     await this.writeJsonData(data);
+
+    return uniqueKey;
   }
 
   public async read(key: string): Promise<any> {

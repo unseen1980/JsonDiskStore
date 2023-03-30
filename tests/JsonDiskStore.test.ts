@@ -14,21 +14,23 @@ describe("JsonDiskStore", () => {
     const db = new JsonDiskStore("data.json", testFilePath, false);
 
     // Test write operation
-    await db.write("key1", "value1");
-    const value1 = await db.read("key1");
+    const uniqueKey1 = (await db.write("key1", "value1")) as string;
+
+    const value1 = (await db.read(uniqueKey1)) as string;
+
     expect(value1).toBe("value1");
 
     // Test update operation
-    await db.update("key1", "updatedValue1");
-    const updatedValue1 = await db.read("key1");
+    await db.update(uniqueKey1, "updatedValue1");
+    const updatedValue1 = await db.read(uniqueKey1);
     expect(updatedValue1).toBe("updatedValue1");
 
     // Test delete operation
-    const deleteSuccess = await db.delete("key1");
+    const deleteSuccess = await db.delete(uniqueKey1);
     expect(deleteSuccess).toBe(true);
 
     // Test read after delete
-    const deletedValue = await db.read("key1");
+    const deletedValue = await db.read(uniqueKey1);
     expect(deletedValue).toBeUndefined();
 
     // Test unsuccessful delete
@@ -45,12 +47,12 @@ describe("JsonDiskStore", () => {
 
   test("cache is utilized for read operations", async () => {
     const db = new JsonDiskStore("data.json", testFilePath, true);
-    await db.write("key1", "value1");
+    const uniqueKey1 = (await db.write("key1", "value1")) as string;
 
     // spyOn fs.promises.readFile to ensure it's not called during read operations
     const readFileSpy = jest.spyOn(fs.promises, "readFile");
 
-    const value1 = await db.read("key1");
+    const value1 = await db.read(uniqueKey1);
     expect(value1).toBe("value1");
     expect(readFileSpy).not.toHaveBeenCalled();
 
@@ -61,10 +63,11 @@ describe("JsonDiskStore", () => {
   test("file content is in sync with cache", async () => {
     const db = new JsonDiskStore("data.json", testFilePath, true);
 
-    await db.write("key1", "value1");
-    await db.write("key2", "value2");
-    await db.update("key1", "updatedValue1");
-    await db.delete("key2");
+    const uniqueKey1 = (await db.write("key1", "value1")) as string;
+    const uniqueKey2 = (await db.write("key2", "value2")) as string;
+
+    await db.update(uniqueKey1, "updatedValue1");
+    await db.delete(uniqueKey2);
 
     const fileContent = await fs.promises.readFile(
       path.resolve(testFilePath, "data.json"),
@@ -73,7 +76,7 @@ describe("JsonDiskStore", () => {
     const fileData = JSON.parse(fileContent);
 
     expect(fileData).toEqual({
-      key1: "updatedValue1",
+      [Object.keys(fileData)[0]]: "updatedValue1",
     });
   });
 });
